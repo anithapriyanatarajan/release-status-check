@@ -1,0 +1,103 @@
+{
+  "generated_at": "2026-06-18T06:17:42+00:00",
+  "summary": {
+    "pass": 5,
+    "fail": 1,
+    "no_uuid": 1
+  },
+  "total": 7,
+  "repos": {
+    "tektoncd/pipeline": [
+      {
+        "repo": "tektoncd/pipeline",
+        "tag": "v1.11.1",
+        "rekor_uuid": "108e9186e8c5677a51c33e77fb56b7f99fdf192905340ce9abdc60589cba2da3451c60ad738768c2",
+        "release_file": "https://infra.tekton.dev/tekton-releases/pipeline/previous/v1.11.1/release.yaml",
+        "status": "pass",
+        "reason": "",
+        "images_attested": 5,
+        "images_matched": 5,
+        "images_sig_checked": 3,
+        "images_signed": 3
+      },
+      {
+        "repo": "tektoncd/pipeline",
+        "tag": "v1.11.0",
+        "rekor_uuid": "108e9186e8c5677a7755d52e49ce9ea7ccaf894ffae2779afa04cf7d882635593a2c220a5c7a0a26",
+        "release_file": "https://infra.tekton.dev/tekton-releases/pipeline/previous/v1.11.0/release.yaml",
+        "status": "pass",
+        "reason": "",
+        "images_attested": 5,
+        "images_matched": 5,
+        "images_sig_checked": 3,
+        "images_signed": 3
+      },
+      {
+        "repo": "tektoncd/pipeline",
+        "tag": "v0.59.0",
+        "rekor_uuid": "24296fb24b8ad77afedce0421f9d0b300ed47db5907cad59970fed93f978290fd32680173c43e675",
+        "release_file": "https://storage.googleapis.com/tekton-releases/pipeline/previous/v0.59.0/release.yaml",
+        "status": "pass",
+        "reason": "",
+        "images_attested": 5,
+        "images_matched": 5,
+        "images_sig_checked": 3,
+        "images_signed": 3
+      }
+    ],
+    "tektoncd/dashboard": [
+      {
+        "repo": "tektoncd/dashboard",
+        "tag": "v0.28.0",
+        "rekor_uuid": "362f8ecba72f43260d889f3dc89b08bda122b9272886b0aef676fa92af4603c6d4862f3a0e7df62e",
+        "release_file": "https://infra.tekton.dev/tekton-releases/dashboard/previous/v0.28.0/tekton-dashboard-release.yaml",
+        "status": "pass",
+        "reason": "",
+        "images_attested": 1,
+        "images_matched": 1,
+        "images_sig_checked": 1,
+        "images_signed": 1
+      }
+    ],
+    "tektoncd/results": [
+      {
+        "repo": "tektoncd/results",
+        "tag": "v0.18.0",
+        "rekor_uuid": "108e9186e8c5677a10268b4a7ac74efdd0da76e60a934fbb3ae72e3615c6c8ac7dda7bf007179ca7",
+        "release_file": "https://infra.tekton.dev/tekton-releases/results/previous/v0.18.0/release.yaml",
+        "status": "pass",
+        "reason": "",
+        "images_attested": 3,
+        "images_matched": 3,
+        "images_sig_checked": 3,
+        "images_signed": 3
+      }
+    ],
+    "tektoncd/triggers": [
+      {
+        "repo": "tektoncd/triggers",
+        "tag": "v0.31.0",
+        "rekor_uuid": "",
+        "release_file": "",
+        "status": "no_uuid",
+        "reason": "No REKOR_UUID found on release page",
+        "images_attested": 0,
+        "images_matched": 0,
+        "images_sig_checked": 0,
+        "images_signed": 0
+      },
+      {
+        "repo": "tektoncd/triggers",
+        "tag": "v0.30.2",
+        "rekor_uuid": "24296fb24b8ad77a3a1b2c4d5e6f70819aabbccddeeff00112233445566778899aabbccddeeff001",
+        "release_file": "https://storage.googleapis.com/tekton-releases/triggers/previous/v0.30.2/release.yaml",
+        "status": "fail",
+        "reason": "only 2/4 attested images matched release.yaml",
+        "images_attested": 4,
+        "images_matched": 2,
+        "images_sig_checked": 3,
+        "images_signed": 2
+      }
+    ]
+  }
+}

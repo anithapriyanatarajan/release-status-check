@@ -1,0 +1,70 @@
+name: Verify Tekton Release Attestations
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 6 * * 1"   # weekly, Mondays 06:17 UTC
+  push:
+    branches: [main]
+    paths:
+      - "scripts/verify.sh"
+      - "docs/**"
+      - ".github/workflows/verify.yml"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install rekor-cli
+        run: |
+          REKOR_VERSION=v1.3.10
+          curl -fsSL -o rekor-cli \
+            "https://github.com/sigstore/rekor/releases/download/${REKOR_VERSION}/rekor-cli-linux-amd64"
+          sudo install -m 0755 rekor-cli /usr/local/bin/rekor-cli
+          rekor-cli version
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Initialize cosign trust root
+        run: cosign initialize
+
+      - name: Run verification
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOS: ${{ vars.REPOS }}      # optional override
+          MINORS: ${{ vars.MINORS }}    # optional override (default 5)
+          VERIFY_IMAGES: ${{ vars.VERIFY_IMAGES }}  # images to cosign-verify per release (default 3)
+          TEKTON_PUBKEY: ${{ vars.TEKTON_PUBKEY }}  # override signing key if needed
+        run: |
+          # Don't let a single failing release abort the page build; the
+          # script's exit code is captured and reported, the JSON is always written.
+          set +e
+          bash scripts/verify.sh
+          echo "verify_exit=$?" >> "$GITHUB_ENV"
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+
+  deploy:
+    needs: verify
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

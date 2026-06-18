@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tekton Attestation Ledger</title>
+<style>
+  :root {
+    --ink: #14130f;
+    --paper: #f3efe6;
+    --line: #d8d1c0;
+    --muted: #6f6a5d;
+    --pass: #2f6b3d;
+    --pass-bg: #e3efe1;
+    --fail: #9d2a2a;
+    --fail-bg: #f6e2df;
+    --warn: #8a6212;
+    --warn-bg: #f4ead2;
+    --skip: #5a5648;
+    --accent: #1b4a6b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ink: #ece7da; --paper: #16150f; --line: #322f26; --muted: #948e7e;
+      --pass: #7fc78c; --pass-bg: #1a2a1c; --fail: #e58a82; --fail-bg: #2c1817;
+      --warn: #d8b25f; --warn-bg: #2a2212; --skip: #8a8472; --accent: #6fb0d6;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font: 16px/1.55 ui-serif, Georgia, "Times New Roman", serif;
+  }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 24px 96px; }
+  header.masthead {
+    border-bottom: 3px double var(--ink); padding: 40px 0 18px; margin-bottom: 8px;
+  }
+  .eyebrow {
+    font: 600 12px/1 ui-monospace, "SFMono-Regular", Menlo, monospace;
+    letter-spacing: .22em; text-transform: uppercase; color: var(--muted);
+  }
+  h1 {
+    font-weight: 600; font-size: clamp(30px, 6vw, 52px); line-height: 1.02;
+    margin: 12px 0 10px; letter-spacing: -.01em;
+  }
+  .sub { color: var(--muted); max-width: 60ch; margin: 0; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 8px 28px; margin-top: 20px;
+    font: 500 13px/1.3 ui-monospace, Menlo, monospace; color: var(--muted);
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+
+  .tally { display: flex; gap: 10px; flex-wrap: wrap; margin: 26px 0 8px; }
+  .chip {
+    font: 600 13px/1 ui-monospace, Menlo, monospace; letter-spacing: .04em;
+    padding: 8px 12px; border: 1px solid var(--line); border-radius: 2px;
+    display: inline-flex; align-items: baseline; gap: 8px;
+  }
+  .chip .n { font-size: 18px; }
+  .chip.pass { color: var(--pass); background: var(--pass-bg); }
+  .chip.fail { color: var(--fail); background: var(--fail-bg); }
+  .chip.warn { color: var(--warn); background: var(--warn-bg); }
+  .chip.skip, .chip.no_uuid { color: var(--skip); }
+
+  section.repo { margin-top: 44px; }
+  .repo-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 16px; border-bottom: 1px solid var(--ink); padding-bottom: 6px;
+  }
+  .repo-head h2 {
+    font: 600 20px/1.2 ui-monospace, Menlo, monospace; margin: 0;
+    letter-spacing: -.01em;
+  }
+  .repo-head .count { font: 500 13px/1 ui-monospace, Menlo, monospace; color: var(--muted); }
+
+  .row {
+    display: grid;
+    grid-template-columns: 88px 1fr auto;
+    gap: 4px 18px; align-items: start;
+    padding: 14px 0; border-bottom: 1px solid var(--line);
+  }
+  .tag { font: 600 15px/1.4 ui-monospace, Menlo, monospace; }
+  .detail { min-width: 0; }
+  .kv {
+    font: 500 12.5px/1.5 ui-monospace, Menlo, monospace; color: var(--muted);
+    word-break: break-all; margin: 1px 0;
+  }
+  .kv b { color: var(--ink); font-weight: 600; }
+  .kv a { color: var(--accent); text-decoration: none; }
+  .kv a:hover { text-decoration: underline; }
+  .reason { font-size: 13.5px; color: var(--muted); margin: 4px 0 0; font-style: italic; }
+  .verdict {
+    justify-self: end; white-space: nowrap;
+    font: 600 12px/1 ui-monospace, Menlo, monospace; letter-spacing: .08em;
+    text-transform: uppercase; padding: 5px 10px; border-radius: 2px;
+  }
+  .verdict.pass { color: var(--pass); background: var(--pass-bg); }
+  .verdict.fail { color: var(--fail); background: var(--fail-bg); }
+  .verdict.warn { color: var(--warn); background: var(--warn-bg); }
+  .verdict.skip, .verdict.no_uuid { color: var(--skip); border: 1px solid var(--line); }
+
+  .bar {
+    height: 4px; background: var(--line); border-radius: 2px; overflow: hidden;
+    margin-top: 6px; max-width: 220px;
+  }
+  .bar > span { display: block; height: 100%; background: var(--pass); }
+  .loading, .error { padding: 60px 0; color: var(--muted); font-style: italic; }
+  .error { color: var(--fail); font-style: normal; }
+  footer { margin-top: 56px; padding-top: 16px; border-top: 1px solid var(--line);
+    font: 500 12px/1.6 ui-monospace, Menlo, monospace; color: var(--muted); }
+  footer a { color: var(--accent); }
+  @media (max-width: 620px) {
+    .row { grid-template-columns: 1fr; }
+    .verdict { justify-self: start; margin-top: 4px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <div class="eyebrow">Sigstore · Rekor transparency log</div>
+    <h1>Tekton Attestation Ledger</h1>
+    <p class="sub">Independent re-verification of the last seven minor lines and their patch
+      releases across the Tekton projects. For each release we resolve the Rekor UUID, fetch the
+      signed attestation, run <code>cosign verify-attestation</code> against Tekton's signing key,
+      and confirm every attested image digest is present in that release's
+      <code>release.yaml</code>.</p>
+    <div class="meta" id="meta"></div>
+  </header>
+
+  <div class="tally" id="tally"></div>
+  <div id="content"><p class="loading">Loading the ledger…</p></div>
+
+  <footer>
+    Generated by a scheduled GitHub Action running <code>rekor-cli</code> + <code>cosign</code>.
+    Re-run from the Actions tab. Source: <a id="srclink" href="#">repository</a>.
+  </footer>
+</div>
+
+<script>
+const LABELS = { pass:"verified", fail:"failed", warn:"check", skip:"skipped", no_uuid:"no uuid" };
+const el = (t, c, txt) => { const e = document.createElement(t); if (c) e.className = c; if (txt!=null) e.textContent = txt; return e; };
+const short = u => u && u.length > 24 ? u.slice(0,12)+"…"+u.slice(-8) : (u||"—");
+
+function rekorUrl(uuid) {
+  return "https://search.sigstore.dev/?uuid=" + encodeURIComponent(uuid);
+}
+
+function renderRow(r) {
+  const row = el("div", "row");
+  row.appendChild(el("div", "tag", r.tag));
+
+  const d = el("div", "detail");
+  if (r.rekor_uuid) {
+    const k = el("div", "kv");
+    k.append("Rekor UUID  ");
+    const b = el("b"); b.textContent = short(r.rekor_uuid); k.appendChild(b);
+    k.append("  ");
+    const a = el("a", null, "↗ verify"); a.href = rekorUrl(r.rekor_uuid);
+    a.target = "_blank"; a.rel = "noopener"; k.appendChild(a);
+    d.appendChild(k);
+  }
+  if (r.images_attested) {
+    const k = el("div", "kv");
+    k.innerHTML = "Images      <b>" + r.images_matched + " / " + r.images_attested +
+      "</b> attested digests matched release.yaml";
+    d.appendChild(k);
+    const bar = el("div", "bar");
+    const fill = el("span");
+    const pct = r.images_attested ? (r.images_matched / r.images_attested * 100) : 0;
+    fill.style.width = pct + "%";
+    if (r.status === "fail") fill.style.background = "var(--fail)";
+    bar.appendChild(fill); d.appendChild(bar);
+  }
+  if (r.images_sig_checked) {
+    const k = el("div", "kv");
+    const ok = r.images_signed === r.images_sig_checked;
+    k.innerHTML = "Signature   <b>" + r.images_signed + " / " + r.images_sig_checked +
+      "</b> cosign verify-attestation against tekton.pub" +
+      (ok ? "" : " — mismatch");
+    d.appendChild(k);
+  }
+  if (r.release_file) {
+    const k = el("div", "kv");
+    const a = el("a", null, "release.yaml"); a.href = r.release_file;
+    a.target = "_blank"; a.rel = "noopener";
+    k.append("Artifact    "); k.appendChild(a);
+    d.appendChild(k);
+  }
+  if (r.reason) d.appendChild(el("p", "reason", r.reason));
+  row.appendChild(d);
+
+  const v = el("div", "verdict " + r.status, LABELS[r.status] || r.status);
+  row.appendChild(v);
+  return row;
+}
+
+function renderTally(summary, total, generated) {
+  const meta = document.getElementById("meta");
+  meta.innerHTML = "";
+  const t = new Date(generated);
+  meta.append(Object.assign(el("span"), { innerHTML: "Last run <b>" +
+    (isNaN(t) ? generated : t.toUTCString()) + "</b>" }));
+  meta.append(Object.assign(el("span"), { innerHTML: "Releases checked <b>" + total + "</b>" }));
+
+  const tally = document.getElementById("tally");
+  const order = ["pass","fail","warn","skip","no_uuid"];
+  order.forEach(k => {
+    if (!summary[k]) return;
+    const c = el("div", "chip " + k);
+    c.appendChild(Object.assign(el("span","n"), { textContent: summary[k] }));
+    c.append(LABELS[k] || k);
+    tally.appendChild(c);
+  });
+}
+
+function render(data) {
+  renderTally(data.summary || {}, data.total || 0, data.generated_at);
+  const content = document.getElementById("content");
+  content.innerHTML = "";
+  for (const [repo, releases] of Object.entries(data.repos || {})) {
+    const sec = el("section", "repo");
+    const head = el("div", "repo-head");
+    head.appendChild(el("h2", null, repo));
+    head.appendChild(el("div", "count", releases.length + " releases"));
+    sec.appendChild(head);
+    releases.forEach(r => sec.appendChild(renderRow(r)));
+    content.appendChild(sec);
+  }
+  // wire source link to current repo if we can infer it
+  const path = location.pathname.split("/").filter(Boolean);
+  if (location.hostname.endsWith("github.io") && path.length) {
+    document.getElementById("srclink").href =
+      "https://github.com/" + location.hostname.split(".")[0] + "/" + path[0];
+  }
+}
+
+fetch("results.json", { cache: "no-store" })
+  .then(r => { if (!r.ok) throw new Error("results.json not found — has the Action run yet?"); return r.json(); })
+  .then(render)
+  .catch(e => {
+    document.getElementById("content").innerHTML =
+      '<p class="error">' + e.message + '</p>';
+  });
+</script>
+</body>
+</html>
